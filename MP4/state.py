@@ -79,12 +79,13 @@ class SingleGoalGridState(AbstractState):
         # We provide you with a method for getting a list of neighbors of a state,
         # you need to instantiate them as GridState objects
         neighboring_grid_locs = self.maze_neighbors(*self.state)
-        
+        for loc in neighboring_grid_locs:
+            nbr_states.append(SingleGoalGridState(loc, self.goal, self.dist_from_start + 1, self.use_heuristic, self.maze_neighbors))
         return nbr_states
 
     # TODO(V): implement this method, check if the current state is the goal state
     def is_goal(self):
-        pass
+        return self.state == self.goal[0]
     
     def __hash__(self):
         return hash(self.state)
@@ -94,11 +95,11 @@ class SingleGoalGridState(AbstractState):
     # TODO(V): implement this method
     # Compute the manhattan distance between self.state and self.goal 
     def compute_heuristic(self):
-        return 0
+        return abs(self.state[0] - self.goal[0][0]) + abs(self.state[1] - self.goal[0][1])
     
     # TODO(V): implement this method... should be unchanged from before
     def __lt__(self, other):
-        pass
+        return self.dist_from_start + self.compute_heuristic() < other.dist_from_start + other.compute_heuristic()
     
     # str and repr just make output more readable when your print out states
     def __str__(self):
@@ -125,18 +126,26 @@ class GridState(AbstractState):
         # We provide you with a method for getting a list of neighbors of a state,
         # You need to instantiate them as GridState objects
         neighboring_locs = self.maze_neighbors(*self.state)
+        new_goal = list(self.goal)
+        if self.state in self.goal:
+            new_goal.remove(self.state)
+        if len(new_goal) == 0:
+            return []
+        for loc in neighboring_locs:
+            nbr_states.append(GridState(loc, tuple(new_goal), self.dist_from_start + 1, self.use_heuristic, self.maze_neighbors, self.mst_cache))
         
         return nbr_states
 
+
     # TODO(VI): implement this method
     def is_goal(self):
-        pass
+        return len(self.goal) == 1 and self.state == self.goal[0]
     
     # TODO(VI): implement these methods __hash__ AND __eq__
     def __hash__(self):
-        return 0
+        return hash((self.state, tuple(self.goal)))
     def __eq__(self, other):
-        return True
+        return self.state == other.state and self.goal == other.goal
     
     # TODO(VI): implement this method
     # Our heuristic is: manhattan(self.state, nearest_goal) + MST(self.goal)
@@ -144,13 +153,27 @@ class GridState(AbstractState):
     # NOTE: if self.goal has only one goal then the MST value is simply zero, 
     #       and so the heuristic reduces to manhattan(self.state, self.goal[0])
     # You should use compute_mst_cost(self.goal, manhattan) which we imported from utils.py
+
     def compute_heuristic(self):
-        return 0
+        def manhattan(a, b):
+            return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+        if len(self.goal) == 1:
+            return manhattan(self.state, self.goal[0])
+        else:
+            if tuple(self.goal) in self.mst_cache:
+                mst_cost = self.mst_cache[tuple(self.goal)]
+            else:
+                mst_cost = compute_mst_cost(self.goal, manhattan)
+                self.mst_cache[tuple(self.goal)] = mst_cost
+            closest_goal = min(self.goal, key=lambda x: manhattan(self.state, x))
+        
+        return manhattan(self.state, closest_goal) + mst_cost
     
     # TODO(VI): implement this method... should be unchanged from before
     def __lt__(self, other):
-        pass
-    
+        return self.dist_from_start + self.compute_heuristic() < other.dist_from_start + other.compute_heuristic()
+
     # str and repr just make output more readable when your print out states
     def __str__(self):
         return str(self.state) + ", goals=" + str(self.goal)
