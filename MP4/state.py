@@ -126,10 +126,10 @@ class GridState(AbstractState):
         # We provide you with a method for getting a list of neighbors of a state,
         # You need to instantiate them as GridState objects
         neighboring_locs = self.maze_neighbors(*self.state)
-        new_goal = list(self.goal)
-        if self.state in self.goal:
+        new_goal = list(self.goal) # make a copy of the list of goals
+        if self.state in self.goal: # if we've reached a goal, remove it from the list of goals
             new_goal.remove(self.state)
-        if len(new_goal) == 0:
+        if len(new_goal) == 0: # if we've reached all goals, return empty list
             return []
         for loc in neighboring_locs:
             nbr_states.append(GridState(loc, tuple(new_goal), self.dist_from_start + 1, self.use_heuristic, self.maze_neighbors, self.mst_cache))
