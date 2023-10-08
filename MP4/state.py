@@ -131,7 +131,7 @@ class GridState(AbstractState):
             new_goal.remove(self.state)
         if len(new_goal) == 0: # if we've reached all goals, return empty list
             return []
-        for loc in neighboring_locs:
+        for loc in neighboring_locs: # otherwise, add a new state for each neighboring location
             nbr_states.append(GridState(loc, tuple(new_goal), self.dist_from_start + 1, self.use_heuristic, self.maze_neighbors, self.mst_cache))
         
         return nbr_states
