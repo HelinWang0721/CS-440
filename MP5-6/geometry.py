@@ -95,19 +95,18 @@ def is_point_in_polygon(point, polygon):
     """
     x, y = point
     n = len(polygon)
-    inside = False
 
-    p1x, p1y = polygon[0]
-    for i in range(n + 1):
-        p2x, p2y = polygon[i % n]
-        if min(p1y, p2y) < y < max(p1y, p2y) and x < max(p1x, p2x):
-            if p1y != p2y:
-                xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-            if p1x == p2x or x < xints:
-                inside = not inside
-        p1x, p1y = p2x, p2y
+    res = []
+    for i in range(n):
+        # Calculate the cross product of vectors
+        cross_product = (polygon[(i+1)%n][0] - polygon[i%n][0]) * (y - polygon[i%n][1]) - \
+                        (polygon[(i+1)%n][1] - polygon[i%n][1]) * (x - polygon[i%n][0])
+        res.append(cross_product)
 
-    return inside
+    if all([i>=0 for i in res]) or all([i<=0 for i in res]):
+        return True
+    else:
+        return False
 
 
 def does_alien_path_touch_wall(alien: Alien, walls: List[Tuple[int]], waypoint: Tuple[int, int]):
@@ -124,17 +123,23 @@ def does_alien_path_touch_wall(alien: Alien, walls: List[Tuple[int]], waypoint: 
     """
     # Get the current position of the alien
     current_pos = alien.get_centroid()
+    current_head, current_tail = alien.get_head_and_tail()
+
+    target_alien = deepcopy(alien)
+    target_alien.set_alien_pos(waypoint)
+    target_head, target_tail = target_alien.get_head_and_tail()
 
     # Check if the line intersects any of the walls
     for wall in walls:
         x1,y1,x2,y2 = wall[0], wall[1],wall[2],wall[3]
         tuple_wall = ((x1,y1),(x2,y2))
-        if segment_distance((current_pos, waypoint), tuple_wall) <= alien.get_width():
+        if segment_distance((current_pos, waypoint), tuple_wall) <= alien.get_width() or \
+            segment_distance((current_head, target_head), tuple_wall) <= alien.get_width() or \
+                segment_distance((current_tail, target_tail), tuple_wall) <= alien.get_width():
             return True
         
     # Check if the updated alien touches a wall
-    alien.set_alien_pos(waypoint)
-    if does_alien_touch_wall(alien, walls):
+    if does_alien_touch_wall(target_alien, walls):
         return True
 
     return False
