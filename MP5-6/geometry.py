@@ -103,10 +103,16 @@ def is_point_in_polygon(point, polygon):
                         (polygon[(i+1)%n][1] - polygon[i%n][1]) * (x - polygon[i%n][0])
         res.append(cross_product)
 
-    if all([i>=0 for i in res]) or all([i<=0 for i in res]):
-        return True
-    else:
-        return False
+    min_x = min(polygon, key=lambda x:x[0])[0]
+    max_x = max(polygon, key=lambda x:x[0])[0]
+    min_y = min(polygon, key=lambda x:x[1])[1]
+    max_y = max(polygon, key=lambda x:x[1])[1]
+
+    if min_x <= x <= max_x and min_y <= y <= max_y:
+        if all([i>=0 for i in res]) or all([i<=0 for i in res]):
+            return True
+    
+    return False
 
 
 def does_alien_path_touch_wall(alien: Alien, walls: List[Tuple[int]], waypoint: Tuple[int, int]):
