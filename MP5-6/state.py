@@ -10,7 +10,7 @@ global_index = count()
 # TODO VI
 # Euclidean distance between two state tuples, of the form (x,y, shape)
 def euclidean_distance(a, b):
-    return 0
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
 
 from abc import ABC, abstractmethod
@@ -89,11 +89,18 @@ class MazeState(AbstractState):
         # if the shape doesn't change, it will have a const cost of 10.
         # otherwise, the move cost will be the euclidean distance between the start and the end positions
         nbr_states = []
+        neighboring_grid_locs = self.maze_neighbors(*self.state)
+
+        for loc in neighboring_grid_locs:
+            if loc[2] == self.state[2]:
+                nbr_states.append(MazeState(loc, self.goal, self.dist_from_start + euclidean_distance(self.state, loc), self.maze, self.use_heuristic))
+            else:
+                nbr_states.append(MazeState(loc, self.goal, self.dist_from_start + 10, self.maze, self.use_heuristic))
         return nbr_states
 
     # TODO VI
     def is_goal(self):
-        return True
+        return (self.state[0], self.state[1]) in self.goal
 
     # We hash BOTH the state and the remaining goals
     #   This is because (x, y, h, (goal A, goal B)) is different from (x, y, h, (goal A))
@@ -101,22 +108,23 @@ class MazeState(AbstractState):
     # NOTE: the order of the goals in self.goal matters, needs to remain consistent
     # TODO VI
     def __hash__(self):
-        return 0
+        return hash((self.state, tuple(self.goal)))
 
     # TODO VI
     def __eq__(self, other):
-        return True
+        return self.state == other.state and self.goal == other.goal
 
     # Our heuristic is: distance(self.state, nearest_goal)
     # We euclidean distance
     # TODO VI
     def compute_heuristic(self):
-        return 0
+        nearest_goal = min(self.goal, key=lambda x: euclidean_distance(self.state, x))
+        return euclidean_distance(self.state, nearest_goal)
 
     # This method allows the heap to sort States according to f = g + h value
     # TODO VI
     def __lt__(self, other):
-        pass
+        return self.dist_from_start + self.compute_heuristic() < other.dist_from_start + other.compute_heuristic()
 
     # str and repr just make output more readable when your print out states
     def __str__(self):

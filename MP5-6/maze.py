@@ -116,6 +116,12 @@ class Maze:
                 A dict with shape index as keys and the list of waypoints coordinates as values
         """
         valid_waypoints = {i: [] for i in range(len(self.alien.get_shapes()))}
+
+        for i in valid_waypoints.keys():
+            for point in self.__waypoints:
+                new_alien = self.create_new_alien(*point, i)
+                if not does_alien_touch_wall(new_alien, self.walls):
+                    valid_waypoints[i].append(point)
         return valid_waypoints
 
     # TODO VI
@@ -128,6 +134,19 @@ class Maze:
                 the k valid waypoints that are closest to waypoint
         """
         nearest_neighbors = []
+        points = self.__valid_waypoints[cur_shape]
+        points.sort(key=lambda x: euclidean_distance(cur_waypoint, x))
+
+        new_alien = self.create_new_alien(*cur_waypoint, cur_shape)
+        cnt = 0
+        for p in points:
+            if p == cur_waypoint:
+                continue
+            if not does_alien_path_touch_wall(new_alien, self.walls, p):
+                cnt += 1
+                nearest_neighbors.append(p)
+            if cnt == self.k:
+                break
         return nearest_neighbors
 
     def create_new_alien(self, x, y, shape_idx):
@@ -144,6 +163,11 @@ class Maze:
             Return:
                 True if the move is valid, False otherwise
         """
+        if end[2] in self.__valid_waypoints:
+            new_alien = self.create_new_alien(*end)
+            if not does_alien_touch_wall(new_alien, self.walls):
+                return True
+            
         return False
 
     def get_neighbors(self, x, y, shape_idx):

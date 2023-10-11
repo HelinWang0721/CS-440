@@ -39,6 +39,29 @@ def search(maze, searchMethod):
 
 # TODO: VI
 def astar(maze):
+    starting_state = maze.get_start()
+    visited_states = {starting_state: (None, 0)}
+
+    frontier = []
+    heapq.heappush(frontier, starting_state)
+
+    while frontier:
+        current_state = heapq.heappop(frontier)
+        if current_state.is_goal():
+            return backtrack(visited_states, current_state)
+
+        for neighbor in current_state.get_neighbors():
+            if neighbor not in visited_states:
+                visited_states[neighbor] = (current_state, neighbor.dist_from_start)
+                heapq.heappush(frontier, neighbor)
+            elif visited_states[neighbor][1] > neighbor.dist_from_start:
+                visited_states[neighbor] = (current_state, neighbor.dist_from_start)
+                # Update frontier
+                for i in range(len(frontier)):
+                    if frontier[i].state == neighbor.state:
+                        frontier[i] = neighbor
+                        break
+
     return None
 
 
@@ -46,4 +69,11 @@ def astar(maze):
 # NOTE: the parent of the starting state is None
 # TODO: VI
 def backtrack(visited_states, current_state):
-    return None
+    path = []
+    state = current_state
+
+    while state is not None:
+        path.insert(0, state)
+        state = visited_states[state][0]
+
+    return path

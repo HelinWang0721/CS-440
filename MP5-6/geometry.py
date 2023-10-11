@@ -36,18 +36,18 @@ def does_alien_touch_wall(alien: Alien, walls: List[Tuple[int]]):
         x1,y1,x2,y2 = wall[0], wall[1],wall[2],wall[3]
         tuple_wall = ((x1,y1),(x2,y2))
         if alien.get_shape() == 'Ball':
-            #determine the distance of centroid to the line
+            # determine the distance of centroid to the line
             distance = point_segment_distance(centroid, tuple_wall)
             if distance <= alien.get_width():
                 return True
         if alien.get_shape() == 'Horizontal':
-            #determine the line segment intersect with the wall
+            # determine the line segment intersect with the wall
             distance = segment_distance(tuple_wall, (head,tail))
             if  distance <= alien.get_width():
                 return True
             
         if alien.get_shape() == 'Vertical':
-            #determine the line segment intersect with the wall
+            # determine the line segment intersect with the wall
             distance = segment_distance(tuple_wall, (head,tail))
             if  distance <= alien.get_width():
                 return True
@@ -222,6 +222,13 @@ def do_segments_intersect(s1, s2):
 
     # Check if the segments are parallel
     if slope1 == slope2:
+        if slope1 == float('inf'):
+            if x1 != x3:
+                return False
+            elif max(y1, y2) < min(y3, y4) or max(y3, y4) < min(y1, y2):
+                return False
+            else:
+                return True
         # on the same line
         if y_intercept1 == y_intercept2:
             if max(x1, x2) < min(x3, x4) or max(x3, x4) < min(x1, x2):
@@ -243,10 +250,10 @@ def do_segments_intersect(s1, s2):
         y_intersect = slope1 * x_intersect + y_intercept1
 
     # Check if the intersection point is within both segments
-    if (min(x1, x2) <= x_intersect <= max(x1, x2) and
-            min(y1, y2) <= y_intersect <= max(y1, y2) and
-            min(x3, x4) <= x_intersect <= max(x3, x4) and
-            min(y3, y4) <= y_intersect <= max(y3, y4)):
+    if min(x1, x2) - 1e-3 <= x_intersect <= max(x1, x2) + 1e-3 and \
+            min(y1, y2) - 1e-3 <= y_intersect <= max(y1, y2) + 1e-3 and \
+            min(x3, x4) - 1e-3 <= x_intersect <= max(x3, x4) + 1e-3 and \
+            min(y3, y4) - 1e-3 <= y_intersect <= max(y3, y4) + 1e-3:
         return True
 
     return False
