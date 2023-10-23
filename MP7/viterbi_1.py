@@ -12,7 +12,7 @@ from math import log
 epsilon_for_pt = 1e-5
 emit_epsilon = 1e-5   # exact setting seems to have little or no effect
 
-def training(sentences, epsilon_for_pt=1e-5):
+def training(sentences):
     """
     Computes initial tags, emission words, and transition tag-to-tag probabilities.
     :param sentences: List of sentences with word-tag pairs.
@@ -34,7 +34,9 @@ def training(sentences, epsilon_for_pt=1e-5):
             tag_counts[tag] += 1
             if prev_tag:
                 tag_pair_counts[prev_tag][tag] += 1
+    
             tag_word_counts[tag][word] += 1
+            tag_word_counts[tag]["UNKNOWN"] += 1
             prev_tag = tag
     
     # Compute initial tag probabilities
@@ -49,8 +51,11 @@ def training(sentences, epsilon_for_pt=1e-5):
         
         for word, count in tag_word_counts[tag].items():
             # Modify the emission probability calculation to reduce the impact of unseen words
-            emit_prob[tag][word] = (count + epsilon_for_pt) / (tag_counts[tag] + epsilon_for_pt * (total_tag_words + 1))
-        
+            if word =="UNKNOWN":
+                emit_prob[tag][word] = (epsilon_for_pt) / (tag_counts[tag] + epsilon_for_pt * (total_tag_words + 1))
+            else:
+                emit_prob[tag][word] = (count + epsilon_for_pt) / (tag_counts[tag] + epsilon_for_pt * (total_tag_words + 1))
+         
         # Compute transition probabilities with Laplace smoothing
         for next_tag in tag_counts:
             trans_prob[tag][next_tag] = (tag_pair_counts[tag][next_tag] + epsilon_for_pt) / (tag_counts[tag] + epsilon_for_pt * (total_tag_pairs + 1))
@@ -76,7 +81,13 @@ def viterbi_stepforward(i, word, prev_prob, prev_predict_tag_seq, emit_prob, tra
             for prev_tag in prev_prob:
                 prev_log_prob = prev_prob[prev_tag]
                 transition_prob = trans_prob[prev_tag][tag]
-                current_log_prob = prev_log_prob + log(transition_prob) + log(emit_prob[tag].get(word, emit_epsilon))
+                
+                if emit_prob[tag].get(word):
+                    x = log(emit_prob[tag].get(word))
+                else:
+                    x = log(emit_prob[tag].get("UNKNOWN"))
+
+                current_log_prob = prev_log_prob + log(transition_prob) + x
                 
                 if current_log_prob > max_log_prob:
                     max_log_prob = current_log_prob
