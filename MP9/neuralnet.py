@@ -15,7 +15,6 @@ so be careful to not modify anything else.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -82,11 +81,11 @@ class NeuralNet(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+    
+        return loss.detach().cpu().numpy().item()
 
-        return loss.item()
 
-
-def fit(train_set,train_labels,dev_set,epochs,batch_size=200):
+def fit(train_set,train_labels,dev_set,epochs,batch_size=100):
     """ 
     Make NeuralNet object 'net'. Use net.step() to train a neural net
     and net(x) to evaluate the neural net.
@@ -123,18 +122,10 @@ def fit(train_set,train_labels,dev_set,epochs,batch_size=200):
 
     losses = []
     
-    for _ in range(epochs):
-        for _, (inputs, labels) in enumerate(train_loader):
+    for x in range(epochs):
+        for x, (inputs, labels) in enumerate(train_loader):
             loss = model.step(inputs, labels)
             losses.append(loss)
-    
-    plt.plot(losses, label='Training loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss Curve')
-    plt.legend()
-    plt.show()
-
     # predict for dev_set
     with torch.no_grad():
         outputs = model(dev_set)
